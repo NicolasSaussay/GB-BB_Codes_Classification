@@ -70,7 +70,7 @@ The result files are Markdown files with collapsible lists: one list per length 
 If you use this repository, please cite the associated paper (manuscript in preparation):
 
 ```bibtex
-@unpublished{arnault2026gb,
+@unpublished{AGS2O26,
   title  = {{GB(3,3)} and {GB(4,4)} Codes: Exhaustive Classification and Comparison with Bivariate Bicycle Codes},
   author = {Arnault, Fran{\c{c}}ois and Gaborit, Philippe and Saussay, Nicolas},
   note   = {Manuscript in preparation},
