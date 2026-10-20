@@ -1,25 +1,12 @@
-// =======================================================================
-// BB(4,4): random search of bivariate bicycle codes and their minimum distance
-//
-// Randomly samples pairs of 4-term polynomials A(X,Y), B(X,Y) over
-// GF(2)[X,Y]/(X^l - 1, Y^m - 1), builds the CSS code of length N = l*m
-// (H_X = [A | B], H_Z = [B^T | A^T]), checks H_X H_Z^T = 0, discards
-// codes with k <= dimension_threshold, computes the minimum distance d of the
-// others, and prints the results grouped by [[N, k, d]] with an example (A, B).
-//
-// Usage:
-//   Edit l, m, dimension_threshold and num_trials at the top of the file, then:
-//   magma bb44_random_search_dmin.m
-//
-// Output:
-//   For each k, then each d: "[[N, k, d]] (number of trials)" with an example A and B.
-// =======================================================================
-
 l := 5;
 m := 5;
 dimension_threshold := 2; // if the dimension is below this, d_min is not computed
 
 num_trials := 5000; // Number of valid draws (k > dimension_threshold)
+
+// Percentage of polynomials drawn with general monomials x^a*y^b
+// (0 = previous behaviour: pure powers of x or y only; 100 = general monomials only)
+general_percent := 50;
 
 red := func< T, l, m | {[t[1] mod l, t[2] mod m] : t in T} >;
 
@@ -58,6 +45,17 @@ function SampleTerms0_4(l, m)
     return [[0, yA[1]], [0, yA[2]], [0, yA[3]], [0, yA[4]]];
 end function;
 
+// NEW: generates 4 distinct general monomials X^a*Y^b, drawn uniformly
+// among the l*m elements of Z_l x Z_m (pure powers of X or Y may also occur)
+function SampleTermsGeneral(l, m)
+    error if l*m lt 4, "l*m must be at least 4 to draw 4 distinct monomials.";
+    grid := {[a, b] : a in [0..l-1], b in [0..m-1]};
+    return SetToSequence(RandomSubset(grid, 4));
+end function;
+
+// NEW: true if at least one monomial involves both X and Y
+IsMixed := func< terms | exists{t : t in terms | t[1] ne 0 and t[2] ne 0} >;
+
 // Generic formatting of a list of 4 monomials
 function FormatPoly(terms)
     s := "";
@@ -95,7 +93,7 @@ function PolyMatrix(l, m, terms)
     return M;
 end function;
 
-BuildBBCode := function(l, m, Aterms, Bterms)
+BuildIBMCode := function(l, m, Aterms, Bterms)
     error if #Aterms ne 4 or #Bterms ne 4,
         "Aterms and Bterms must contain exactly 4 monomials.";
 
@@ -109,7 +107,7 @@ BuildBBCode := function(l, m, Aterms, Bterms)
     return HX, HZ, A, B, n;
 end function;
 
-function DistanceBB(HX, HZ)
+function DistanceIBM(HX, HZ)
     N := Ncols(HX);
     k := N - 2*Rank(HX);
     if k eq 0 then
@@ -137,9 +135,14 @@ end function;
 
 results_by_k := AssociativeArray();
 
-// Random sampling among the 5 forms:
-// 1: 2+2, 2: 1+3, 3: 3+1, 4: 4+0 (pure X), 5: 0+4 (pure Y)
-function SampleRandomTerms(l, m)
+// Random sampling:
+// - with probability general_percent %: 4 general monomials X^a*Y^b (SampleTermsGeneral)
+// - otherwise, one of the 5 previous forms:
+//   1: 2+2, 2: 1+3, 3: 3+1, 4: 4+0 (pure X), 5: 0+4 (pure Y)
+function SampleRandomTerms(l, m, general_percent)
+    if Random(1, 100) le general_percent then
+        return SampleTermsGeneral(l, m);
+    end if;
     choice := Random([1, 2, 3, 4, 5]);
     if choice eq 1 then
         return SampleTerms2_2(l, m);
@@ -155,16 +158,18 @@ function SampleRandomTerms(l, m)
 end function;
 
 valid_count := 0;
+total_draws := 0;
 while valid_count lt num_trials do
-    Aterms := SampleRandomTerms(l, m);
-    Bterms := SampleRandomTerms(l, m);
+    total_draws := total_draws + 1;
+    Aterms := SampleRandomTerms(l, m, general_percent);
+    Bterms := SampleRandomTerms(l, m, general_percent);
 
     // Filtering without interruption: exactly 4 distinct monomials mod (l,m)
     if #red(Aterms, l, m) ne 4 or #red(Bterms, l, m) ne 4 then
         continue;
     end if;
 
-    HX, HZ, A, B, n := BuildBBCode(l, m, Aterms, Bterms);
+    HX, HZ, A, B, n := BuildIBMCode(l, m, Aterms, Bterms);
 
     // Quick calculation of k before the distance search step (MinimumWeight)
     N := Ncols(HX);
@@ -177,7 +182,7 @@ while valid_count lt num_trials do
 
     valid_count := valid_count + 1;
 
-    P := DistanceBB(HX, HZ);
+    P := DistanceIBM(HX, HZ);
     d := P[3];
 
     if not IsDefined(results_by_k, k) then
@@ -188,8 +193,12 @@ while valid_count lt num_trials do
         results_by_k[k][d] := [* *];
     end if;
 
-    Append(~results_by_k[k][d], <Aterms, Bterms, N>);
+    // 4th component: true if A or B contains a mixed monomial X^a*Y^b (a, b != 0)
+    Append(~results_by_k[k][d], <Aterms, Bterms, N, IsMixed(Aterms) or IsMixed(Bterms)>);
 end while;
+
+printf "Grid (l, m) = (%o, %o), general_percent = %o, valid draws = %o, total draws = %o\n\n",
+    l, m, general_percent, valid_count, total_draws;
 
 // Sorting and display: grouped by k, then ascending d
 k_values := Sort([k : k in Keys(results_by_k)]);
@@ -204,12 +213,22 @@ for k in k_values do
     for d in d_values do
         entries := results_by_k[k][d];
         N := entries[1][3];
-        e := entries[1]; // A representative
 
-        polyA_str := FormatPoly(e[1]);
-        polyB_str := FormatPoly(e[2]);
+        mixed_entries := [e : e in entries | e[4]];
+        pure_entries  := [e : e in entries | not e[4]];
 
-        printf "--- Parameters = [[%o, %o, %o]] (%o trial(s)) ---\n", N, k, d, #entries;
-        printf "  Example : A = %o  |  B = %o\n\n", polyA_str, polyB_str;
+        printf "--- Parameters = [[%o, %o, %o]] (%o trial(s): %o with mixed monomials, %o pure) ---\n",
+            N, k, d, #entries, #mixed_entries, #pure_entries;
+
+        // One representative of each kind when available
+        if #pure_entries gt 0 then
+            e := pure_entries[1];
+            printf "  Example (pure)  : A = %o  |  B = %o\n", FormatPoly(e[1]), FormatPoly(e[2]);
+        end if;
+        if #mixed_entries gt 0 then
+            e := mixed_entries[1];
+            printf "  Example (mixed) : A = %o  |  B = %o\n", FormatPoly(e[1]), FormatPoly(e[2]);
+        end if;
+        printf "\n";
     end for;
 end for;
