@@ -4,7 +4,7 @@ Classification of generalized bicycle (GB) quantum codes with weight-3 and weigh
 
 ## About GB and BB codes
 
-A generalized bicycle code GB(w, w) is a CSS quantum code `[[2n, k, d]]` built from two binary circulant matrices, defined by two polynomials `A(X)` and `B(X)` of Hamming weight `w` over `GF(2)[X]/(X^n - 1)`. A bivariate bicycle code BB(4,4) is a CSS code of length `N = 2l*m` built from two polynomials `A(X, Y)` and `B(X, Y)` with four terms each over `GF(2)[X, Y]/(X^l - 1, Y^m - 1)`.
+A generalized bicycle code GB(w, w) is a CSS quantum code `[[2n, k, d]]` built from two binary circulant matrices, defined by two polynomials `A(X)` and `B(X)` of Hamming weight `w` over `GF(2)[X]/(X^n - 1)`. A bivariate bicycle code BB(4,4) is a CSS code of length `N = 2lm` built from two polynomials `A(X, Y)` and `B(X, Y)` with four terms each over `GF(2)[X, Y]/(X^l - 1, Y^m - 1)`.
 
 ## Classification methodology
 
