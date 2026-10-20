@@ -4,11 +4,13 @@ Classification of generalized bicycle (GB) quantum codes with weight-3 and weigh
 
 ## About GB and BB codes
 
-A generalized bicycle code GB(w, w) is a CSS quantum code `[[2n, k, d]]` built from two binary circulant matrices, defined by two polynomials `A(X)` and `B(X)` of Hamming weight `w` over `GF(2)[X]/(X^n - 1)`. A bivariate bicycle code BB(4,4) is a CSS code of length `N = 2lm` built from two polynomials `A(X, Y)` and `B(X, Y)` with four terms each over `GF(2)[X, Y]/(X^l - 1, Y^m - 1)`.
+A generalized bicycle code GB(w, w) is a CSS quantum code `[[2n, k, d]]` built from two binary `n x n` circulant matrices, defined by two polynomials `A(X)` and `B(X)` of Hamming weight `w` over `GF(2)[X]/(X^n - 1)`. Its parity-check matrices are `H_X = [A | B]` and `H_Z = [B^T | A^T]`; the CSS condition `H_X H_Z^T = AB + BA = 0` holds because circulant matrices commute. The dimension is `k = 2 deg gcd(A(X), B(X), X^n - 1)`.
+
+A bivariate bicycle code BB(4,4) is a CSS code of length `N = 2lm` built from two polynomials `A(X, Y)` and `B(X, Y)` with four terms each over `GF(2)[X, Y]/(X^l - 1, Y^m - 1)`, with the same parity-check matrices `H_X = [A | B]` and `H_Z = [B^T | A^T]`; the CSS condition holds because this algebra is commutative.
 
 ## Classification methodology
 
-- **GB(3,3) and GB(4,4).** For each length `n`, pairs `(A, B)` are reduced to one representative per equivalence class (cyclic shifts, multipliers `X -> X^m`, swap `A <-> B`), using canonical integer bitmasks. The dimension `k` and the minimum distance `d` are then computed with Magma.
+- **GB(3,3) and GB(4,4).** For each circulant size `n` (code length `2n`), pairs `(A, B)` are reduced to one representative per equivalence class (independent cyclic shifts `(A, B) -> (X^i A, X^j B)`, multipliers `X -> X^a` with `gcd(a, n) = 1`, swap `A <-> B`), using canonical integer bitmasks. The dimension `k` and the minimum distance `d` are then computed with Magma.
 - **BB(4,4).** Pairs `(A, B)` are drawn at random for a given `(l, m)`; the minimum distance of each code is computed with Magma, and the codes are grouped by parameters `[[N, k, d]]`. This search is not exhaustive.
 
 ## Repository structure
@@ -58,7 +60,7 @@ The scripts of the GB families also have a parallel batch mode (see the header o
 
 ## Results
 
-The result files are Markdown files with collapsible lists: one list per length (`n` for GB, `N` for BB), then one list per parameter `[[N, k, d]]`, containing the pairs `(A, B)` in a code block. For GB codes, the summary of each length gives its best parameters: for each dimension `k`, the parameters of greatest distance `d`.
+The result files are Markdown files with collapsible lists: one list per length (circulant size `n`, i.e. code length `2n`, for GB; `N` for BB), then one list per parameter `[[N, k, d]]`, containing the pairs `(A, B)` in a code block. For GB codes, the summary of each value of `n` gives its best parameters: for each dimension `k`, the parameters of greatest distance `d`.
 
 ## Licenses
 
@@ -70,7 +72,7 @@ The result files are Markdown files with collapsible lists: one list per length 
 If you use this repository, please cite the associated paper (manuscript in preparation):
 
 ```bibtex
-@unpublished{AGS2O26,
+@unpublished{AGS2026,
   title  = {{GB(3,3)} and {GB(4,4)} Codes: Exhaustive Classification and Comparison with Bivariate Bicycle Codes},
   author = {Arnault, Fran{\c{c}}ois and Gaborit, Philippe and Saussay, Nicolas},
   note   = {Manuscript in preparation},
